@@ -1,0 +1,25 @@
+<% include ../partials/header %>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-3 room">
+            <form class="join">
+                <div class="form-group">
+                    <label class="sr-only">Room</label>
+                    <input type="text" name="room" placeholder="Room"/>
+                </div>
+                <button type="submit">Join</button>
+            </form>
+            <ul class="messages"></ul>
+            <form class="message">
+                <div class="form-group">
+                    <label class="sr-only">Message</label>
+                    <textarea rows="4" name="message" placeholder="Message"></textarea>
+                </div>
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<% include ../partials/footer %>

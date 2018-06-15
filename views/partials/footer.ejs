@@ -1,0 +1,54 @@
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://wzrd.in/standalone/uuid%2Fv4@latest"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script>
+    let socketHttp = io.connect('http://localhost:3000');
+    let socketHttps = io.connect('https://localhost:3080');
+
+    let username = 'anonymous';
+    socketHttps.on('connection', (data) => {
+        console.log('username: ' + data.username);
+        username = data.username;
+    });
+    $('form.join').submit(function (e) {
+        e.preventDefault();
+        let room = $('input', this).val();
+        let id = uuidv4();
+        console.log(id);
+        socketHttp.emit('join_room', {id: id, data: {room:room}});
+        socketHttps.emit('join_room', {id: id, data: {room:room}});
+
+        $(this).parent().attr('id', room);
+        $(this).siblings('.message').show();
+    });
+
+    $('form.message').submit(function (e) {
+        e.preventDefault();
+        if ($('textarea', this).val()) {
+            let id = uuidv4();
+            let data = {
+                username: username,
+                room: $(this).parent().attr('id'),
+                message: $('textarea', this).val()
+            };
+            socketHttp.emit('chat_message', {id: id, data: data});
+            socketHttps.emit('chat_message', {id: id, data: data});
+            $('textarea', this).val('');
+        }
+    });
+
+    let messages = [];
+    socketHttps.on('chat_message', function (data) {
+        console.log(data);
+        messages.push({username: data.username, data: data});
+        $('.messages').prepend($('<li>').text(data.username + ' : ' + data.message));
+    });
+    socketHttp.on('chat_message', function (data) {
+        // this.messages.push({id:data.id, data:data});
+        // $('.messages').prepend($('<li>').text(data.username + ' : ' + data.message));
+    });
+</script>
+</body>
+</html>
