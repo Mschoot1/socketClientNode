@@ -9,16 +9,17 @@
 
     let username = 'anonymous';
     socketHttps.on('connection', (data) => {
-        console.log('username: ' + data.username);
         username = data.username;
     });
     $('form.join').submit(function (e) {
         e.preventDefault();
         let room = $('input', this).val();
         let id = uuidv4();
-        console.log(id);
-        socketHttp.emit('join_room', {id: id, data: {room:room}});
-        socketHttps.emit('join_room', {id: id, data: {room:room}});
+        let data = {
+            room: $(this).parent().attr('id')
+        };
+        socketHttp.emit('join_room', {id: id, data: data});
+        socketHttps.emit('join_room', {id: id, data: data});
 
         $(this).parent().attr('id', room);
         $(this).siblings('.message').show();
@@ -39,16 +40,36 @@
         }
     });
 
-    let messages = [];
     socketHttps.on('chat_message', function (data) {
-        console.log(data);
-        messages.push({username: data.username, data: data});
-        $('.messages').prepend($('<li>').text(data.username + ' : ' + data.message));
+        handlePackets(data, function () {
+            handleChatMessage(data.data);
+        });
     });
     socketHttp.on('chat_message', function (data) {
-        // this.messages.push({id:data.id, data:data});
-        // $('.messages').prepend($('<li>').text(data.username + ' : ' + data.message));
+        handlePackets(data, function () {
+            handleChatMessage(data.data);
+        });
     });
+
+    function handleChatMessage(data) {
+        $('.messages').prepend($('<li>').text(data.username + ' : ' + data.message));
+    }
+
+    let packets = [];
+
+    function handlePackets(data, callback) {
+        let found = false;
+        packets.forEach((packet) => {
+            if (data.id === packet.id && JSON.stringify(data.data) === JSON.stringify(packet.data) && typeof callback === "function") {
+                callback(data);
+                packets.splice(packets.indexOf(packet), 1);
+                found = true;
+            }
+        });
+        if (!found) {
+            packets.push(data)
+        }
+    }
 </script>
 </body>
 </html>
